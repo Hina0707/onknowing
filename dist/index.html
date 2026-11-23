@@ -1,0 +1,242 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>AI 학습 점검</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="./vendor/katex/katex.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="layout">
+    <nav class="study-tabs" aria-label="학습 기능">
+      <button type="button" data-view="quiz" aria-pressed="true">문제 풀기</button>
+      <button type="button" data-view="concepts" aria-pressed="false">개념 정리</button>
+      <button type="button" data-view="history" aria-pressed="false">지난 리포트</button>
+    </nav>
+    <p class="notice" id="file-notice" hidden>파일을 분석하려면 <a href="http://localhost:3000/">로컬 사이트</a>를 열어 주세요.</p>
+
+    <section id="upload-screen">
+      <div class="screen-heading">
+        <h1 id="upload-title" tabindex="-1">학습 자료를 올려 주세요</h1>
+        <p id="upload-description">Gemini가 파일을 읽고 선택한 수만큼 객관식 문제를 만들어요.</p>
+      </div>
+      <form class="card" id="upload-form">
+        <div class="upload-field">
+          <label for="study-file">학습 자료 파일</label>
+          <p class="field-note" id="file-types">PDF, JPG, PNG, WebP · 3MB 이하</p>
+          <input id="study-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" aria-describedby="file-types">
+        </div>
+        <p class="error" id="upload-error" role="alert" hidden></p>
+        <div class="count-field" id="question-count-field">
+          <label for="question-count">문제 수</label>
+          <select id="question-count"><option value="5">5문제</option></select>
+        </div>
+        <div class="card-actions">
+          <div class="ai-wait">
+            <span class="ai-wait-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span id="upload-status" role="status"></span>
+          </div>
+          <button type="submit" class="primary" id="upload-submit" disabled>문제 5개 만들기</button>
+        </div>
+      </form>
+      <section class="concept-results" id="concept-results" aria-labelledby="concept-title" hidden>
+        <h2 id="concept-title">핵심 개념</h2>
+        <p class="field-note" id="concept-file"></p>
+        <div id="concept-overview"></div>
+        <div id="concept-list"></div>
+      </section>
+    </section>
+
+    <section id="question-screen" hidden>
+      <div class="screen-heading">
+        <h1 id="question-title" tabindex="-1"></h1>
+        <p id="question-subtitle"></p>
+      </div>
+      <form class="card" id="answer-form">
+        <p id="question-text" class="question-text"></p>
+        <div id="question-figure"></div>
+        <fieldset>
+          <legend>답안 선택</legend>
+          <div class="answer-options" id="answer-options"></div>
+        </fieldset>
+        <fieldset class="confidence-field" aria-describedby="confidence-help">
+          <legend>정답 자신감</legend>
+          <p class="field-note" id="confidence-help">고른 답이 맞을 것 같은 정도를 선택하세요.</p>
+          <div class="confidence" id="confidence-options"></div>
+        </fieldset>
+        <div class="card-actions">
+          <button type="submit" class="primary" id="submit-answer" disabled></button>
+        </div>
+      </form>
+    </section>
+
+    <section id="review-screen" hidden>
+      <div class="screen-heading">
+        <h1 tabindex="-1">오답 코칭과 해설</h1>
+        <p id="review-score"></p>
+      </div>
+      <nav id="review-index" class="review-index" aria-label="복습할 문항"></nav>
+      <article class="card review-card">
+        <div class="review-heading">
+          <h2 id="review-question-title" tabindex="-1"></h2>
+          <span id="review-outcome" class="result-tag"></span>
+        </div>
+        <p id="review-question-text" class="long-text"></p>
+        <div id="review-question-figure"></div>
+        <p id="review-your-answer" class="answer-summary"></p>
+        <p id="review-confidence-guide" class="field-note" hidden>풀이에 필요한 핵심 개념부터 복습해 보세요.</p>
+        <section class="coach-panel" id="coach-panel" aria-labelledby="coach-heading" hidden>
+          <header class="coach-header">
+            <span class="coach-avatar coach-avatar-ai" aria-hidden="true">G</span>
+            <div><h3 id="coach-heading">Gemini 코치</h3><span>오답 복습</span></div>
+          </header>
+          <div class="coach-chat">
+            <button type="button" class="secondary" id="coach-start">코칭 시작</button>
+            <ol class="coach-thread" id="coach-thread" aria-live="polite" aria-relevant="additions"></ol>
+            <div class="ai-wait coach-wait">
+              <span class="coach-avatar coach-avatar-ai" aria-hidden="true">G</span>
+              <span class="ai-wait-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span id="coach-status" role="status"></span>
+            </div>
+            <p class="error" id="coach-error" role="alert" hidden></p>
+            <form class="coach-form" id="coach-form" hidden>
+              <span class="coach-avatar coach-avatar-user" aria-hidden="true">나</span>
+              <textarea id="coach-answer" aria-label="내 답변" rows="2" maxlength="800" placeholder="생각한 것을 그대로 써 보세요."></textarea>
+              <button class="primary" type="submit" id="coach-send" disabled>보내기</button>
+            </form>
+            <p class="field-note" id="coach-complete" hidden>대화를 마쳤어요. 이제 해설과 내 생각을 비교해 보세요.</p>
+          </div>
+        </section>
+        <button id="reveal-solution" class="secondary reveal-solution" type="button" aria-controls="review-solution" aria-expanded="false">정답과 해설 보기</button>
+        <div class="review-solution" id="review-solution" hidden>
+          <h3 id="review-correct-answer"></h3>
+          <p class="long-text" id="review-explanation"></p>
+          <details class="source-evidence" id="review-source" hidden>
+            <summary>출제 근거 보기</summary>
+            <p class="long-text" id="source-note" hidden></p>
+            <p class="field-note" id="source-status" role="status"></p>
+            <blockquote id="source-quote" hidden>
+              <strong id="source-quote-label"></strong>
+              <p id="source-quote-text"></p>
+            </blockquote>
+            <div id="source-preview" class="source-preview"></div>
+            <a id="source-original" class="source-original" target="_blank" rel="noopener noreferrer">원본 파일 열기</a>
+          </details>
+          <p class="field-note" id="review-common-mistake" hidden></p>
+          <label id="review-reason-label" for="review-reason" hidden>틀린 이유
+            <select id="review-reason">
+              <option value="">선택 안 함</option>
+              <option value="concept">개념을 몰랐어요</option>
+              <option value="calculation">계산 실수</option>
+              <option value="reading">문제를 잘못 읽었어요</option>
+            </select>
+          </label>
+        </div>
+      </article>
+      <div class="card-actions review-navigation">
+        <button type="button" class="secondary" id="previous-review">이전 문항</button>
+        <button type="button" class="secondary" id="next-review">다음 문항</button>
+      </div>
+      <p class="error" id="retest-error" role="alert" hidden></p>
+      <div class="ai-wait">
+        <span class="ai-wait-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span id="retest-status" role="status"></span>
+      </div>
+      <div class="card-actions">
+        <button type="button" class="secondary" id="start-retest" hidden>틀린 개념 다시 풀기</button>
+        <button type="button" class="primary" id="open-report">리포트 보기</button>
+      </div>
+    </section>
+
+    <section id="history-screen" hidden>
+      <div class="screen-heading">
+        <h1 tabindex="-1">지난 리포트</h1>
+        <p>이 브라우저에서 완료한 학습을 다시 볼 수 있어요.</p>
+      </div>
+      <div class="card">
+        <p id="history-empty">아직 완료한 학습이 없어요.</p>
+        <ul class="report-list" id="reports-list"></ul>
+      </div>
+    </section>
+
+    <section id="report-screen" hidden>
+      <div class="screen-heading">
+        <h1 tabindex="-1">학습 리포트</h1>
+        <p id="report-source"></p>
+      </div>
+      <div class="metrics" aria-label="첫 풀이 요약">
+        <div class="metric"><span>정답률</span><strong id="report-accuracy"></strong><small id="report-correct-count"></small></div>
+        <div class="metric"><span>평균 자신감</span><strong id="report-confidence"></strong><small>5점 만점</small></div>
+        <div class="metric"><span>판단 정확도</span><strong id="report-calibration"></strong><small>100점 만점</small></div>
+      </div>
+      <div class="card report-card">
+        <h2>자신감과 실제 정답률</h2>
+        <div class="score-bar">
+          <div><label for="confidence-bar">평균 자신감 환산</label><strong id="confidence-percent"></strong></div>
+          <progress id="confidence-bar" max="100" value="0"></progress>
+        </div>
+        <div class="score-bar">
+          <div><label for="accuracy-bar">실제 정답률</label><strong id="accuracy-percent"></strong></div>
+          <progress id="accuracy-bar" max="100" value="0"></progress>
+        </div>
+        <p class="field-note" id="report-gap"></p>
+        <ul id="report-outcomes" class="report-outcomes" aria-label="자신감 유형별 문항 수"></ul>
+      </div>
+      <div class="card report-card">
+        <h2>복습 우선순위</h2>
+        <p id="report-weak" class="long-text"></p>
+        <ol id="report-priorities" class="report-priorities"></ol>
+        <p id="report-reasons" class="field-note" hidden></p>
+        <p id="report-coaching" class="field-note" hidden></p>
+      </div>
+      <section class="card report-card report-analysis" aria-labelledby="report-analysis-title">
+        <h2 id="report-analysis-title">이번 학습 분석</h2>
+        <div class="analysis-part">
+          <h3>어떤 문제를 잘 풀었나요?</h3>
+          <p id="analysis-performance"></p>
+        </div>
+        <div class="analysis-part">
+          <h3>자신감은 실제 결과와 얼마나 맞았나요?</h3>
+          <p id="analysis-judgment"></p>
+        </div>
+        <div class="analysis-part">
+          <h3>다음 복습은 이렇게 해 보세요</h3>
+          <ol id="analysis-plan"></ol>
+          <p id="analysis-retest"></p>
+        </div>
+      </section>
+      <div class="card report-card">
+        <h2>문항별 결과</h2>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">문항</th><th scope="col">결과</th><th scope="col">자신감</th><th scope="col">판단 정확도</th></tr></thead>
+            <tbody id="report-rows"></tbody>
+          </table>
+        </div>
+        <p class="field-note">자신감 1~5를 0~100점으로 환산했을 때, 정오답 점수와 차이가 작을수록 판단 정확도가 높아요.</p>
+      </div>
+      <div class="card report-card" id="retest-report" hidden>
+        <h2>재검증 결과</h2>
+        <p id="retest-result" class="result-line"></p>
+        <p id="retest-explanation" class="long-text"></p>
+      </div>
+      <div class="card-actions">
+        <button class="secondary" type="button" id="back-to-history" hidden>목록 보기</button>
+        <button class="secondary" type="button" id="back-to-review" hidden>오답 코칭과 해설 보기</button>
+        <button class="primary" type="button" id="new-quiz">새 문제 만들기</button>
+      </div>
+    </section>
+  </main>
+  <script>
+    if (location.protocol === 'file:') {
+      document.getElementById('file-notice').hidden = false;
+      document.getElementById('upload-form').inert = true;
+    } else {
+      import('./app.js');
+    }
+  </script>
+</body>
+</html>

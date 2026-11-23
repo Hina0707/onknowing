@@ -1,0 +1,22 @@
+{
+  "name": "onknowing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/browser-assets.js",
+    "dev": "node --env-file-if-exists=.env server.js",
+    "prestart": "node scripts/browser-assets.js",
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test",
+    "prebuild": "node scripts/browser-assets.js",
+    "build": "node --check dist/app.js && node --check dist/training.js && node --check dist/figures.js && node --check dist/math.js && node --check dist/source-preview.js && node --check lib/quiz.js && node --check lib/coach.js && node --check server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "katex": "0.19.1",
+    "pdfjs-dist": "6.5.438"
+  }
+}

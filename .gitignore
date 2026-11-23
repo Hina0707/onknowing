@@ -1,0 +1,9 @@
+node_modules/
+dist/vendor/
+.openai/
+.env
+.env.*
+!.env.example
+.vercel/
+*.log
+*.tar.gz

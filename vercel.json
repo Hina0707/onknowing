@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "outputDirectory": "dist",
+  "buildCommand": "npm run build",
+  "functions": { "api/chat.js": { "maxDuration": 60 }, "api/quiz.js": { "maxDuration": 60 }, "api/coach.js": { "maxDuration": 45 } },
+  "headers": [{ "source": "/(.*)", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }, { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }] }]
+}
