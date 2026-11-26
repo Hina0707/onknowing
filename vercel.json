@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "framework": null,
   "outputDirectory": "dist",
   "buildCommand": "npm run build",
   "functions": { "api/chat.js": { "maxDuration": 60 }, "api/quiz.js": { "maxDuration": 60 }, "api/coach.js": { "maxDuration": 45 } },
